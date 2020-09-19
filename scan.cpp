@@ -24,7 +24,6 @@ token scan() {
             token_image[i++] = c;
             if (i >= MAX_TOKEN_LEN) {
             	std::cout << "max token length exceeded\n";
-                //printf("max token length exceeded\n");
                 exit(1);
             }
             c = getchar();
@@ -32,6 +31,9 @@ token scan() {
         token_image[i] = '\0';
         if (!strcmp(token_image, "read")) return t_read;
         else if (!strcmp(token_image, "write")) return t_write;
+        else if (!strcmp(token_image, "if")) return t_if;
+        else if (!strcmp(token_image, "while")) return t_while;
+        else if (!strcmp(token_image, "end")) return t_end;
         else return t_id;
     }
     else if (isdigit(c)) {
@@ -45,7 +47,6 @@ token scan() {
         case ':':
             if ((c = getchar()) != '=') {
             	std:: cout<< stderr<< "error\n";
-                //fprintf(stderr, "error\n");
                 exit(1);
             } else {
                 c = getchar();
@@ -58,15 +59,33 @@ token scan() {
         case '-': c = getchar(); return t_sub;
         case '*': c = getchar(); return t_mul;
         case '/': c = getchar(); return t_div;
+        case '=': c = getchar(); return t_eq;
+        case '<':
+            if ((c = getchar()) == '>') {
+                c = getchar();
+                return t_neq;
+            } 
+            else if ((c = getchar()) == '=') {
+                c = getchar();
+                return t_lte;
+            } else {
+                // TODO : should return an error?
+                c = getchar();
+            	return t_lt;
+            }
+            break;
+        case '>':
+            if ((c = getchar()) != '=') {
+                // TODO : should return an error?
+                c = getchar();
+            	return t_gt;
+            } else {
+                c = getchar();
+                return t_gte;
+            }
+            break;
         default:
         	std:: cout<<"error\n";
-           // printf("error\n");
             exit(1);
     }
 }
-
-// int main () {
-//     input_token = scan();
-//     //program ();
-//     return 0;
-// }

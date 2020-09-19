@@ -15,7 +15,8 @@
 using namespace std;
 
 const char* names[] = {"read", "write", "id", "literal", "gets",
-                       "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+                       "add", "sub", "mul", "div", "lparen", "rparen", "eof",
+                       "if", "end", "eq", "neq", "lt", "gt", "lte", "gte"};
 
 static token input_token;
 
@@ -32,7 +33,10 @@ void match (token expected) {
         cout << "\n";
         input_token = scan();
     }
-    else error ();
+    else {
+        cout << "match error\n";
+        error ();
+    }
 }
 
 void program ();
@@ -45,6 +49,8 @@ void factor ();
 void factor_tail ();
 void add_op ();
 void mul_op ();
+void cond ();
+void rel_op ();
 
 void program () {
     switch (input_token) {
@@ -52,11 +58,15 @@ void program () {
         case t_read:
         case t_write:
         case t_eof:
+        case t_if:
+        case t_while:
             cout << "predict program --> stmt_list eof\n";
             stmt_list ();
             match (t_eof);
             break;
-        default: error ();
+        default:
+            cout << "program error\n";
+            error ();
     }
 
 }
@@ -66,14 +76,19 @@ void stmt_list () {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_while:
             cout << "predict stmt_list --> stmt stmt_list\n";
             stmt ();
             stmt_list ();
             break;
         case t_eof:
+        case t_end:
             cout << "predict stmt_list --> epsilon\n";
             break;          /* epsilon production */
-        default: error ();
+        default:
+            cout << "stmt_list error\n";
+            error ();
     }
 }
 
@@ -95,7 +110,23 @@ void stmt () {
             match (t_write);
             expr ();
             break;
-        default: error ();
+        case t_if:
+            cout << "predict stmt --> if cond stmt_list end\n";
+            match (t_if);
+            cond ();
+            stmt_list ();
+            match (t_end);
+            break;
+        case t_while:
+            cout << "predict stmt --> while cond stmt_list end\n";
+            match (t_while);
+            cond ();
+            stmt_list ();
+            match (t_end);
+            break;
+        default:
+            cout << "stmt error\n";
+            error ();
     }
 }
 
@@ -108,7 +139,9 @@ void expr () {
             term ();
             term_tail ();
             break;
-        default: error ();
+        default:
+            cout << "syntax error\n";
+            error ();
     }
 }
 
@@ -121,7 +154,9 @@ void term () {
             factor ();
             factor_tail ();
             break;
-        default: error ();
+        default:
+            cout << "expr error\n";
+            error ();
     }
 }
 
@@ -138,10 +173,21 @@ void term_tail () {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_while:
         case t_eof:
+        case t_end:
+        case t_eq:
+        case t_neq:
+        case t_lt:
+        case t_gt:
+        case t_lte:
+        case t_gte:
             cout << "predict term_tail --> epsilon\n";
             break;          /* epsilon production */
-        default: error ();
+        default:
+            cout << "term_tail error\n";
+            error ();
     }
 }
 
@@ -161,7 +207,9 @@ void factor () {
             expr ();
             match (t_rparen);
             break;
-        default: error ();
+        default:
+            cout << "factor error\n";
+            error ();
     }
 }
 
@@ -180,10 +228,21 @@ void factor_tail () {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_while:
         case t_eof:
+        case t_end:
+        case t_eq:
+        case t_neq:
+        case t_lt:
+        case t_gt:
+        case t_lte:
+        case t_gte:
             cout << "predict factor_tail --> epsilon\n";
             break;          /* epsilon production */
-        default: error ();
+        default:
+            cout << "factor_tail error\n";
+            error ();
     }
 }
 
@@ -197,7 +256,9 @@ void add_op () {
             cout << "predict add_op --> sub\n";
             match (t_sub);
             break;
-        default: error ();
+        default:
+            cout << "add_op error\n";
+            error ();
     }
 }
 
@@ -211,7 +272,57 @@ void mul_op () {
             cout << "predict mul_op --> div\n";
             match (t_div);
             break;
-        default: error ();
+        default:
+            cout << "mul_op error\n";
+            error ();
+    }
+}
+
+void cond () {
+    switch (input_token) {
+        case t_id:
+        case t_literal:
+        case t_lparen:
+            cout << "predict cond --> expr rel_op expr\n";
+            expr ();
+            rel_op ();
+            expr ();
+            break;
+        default:
+            cout << "cond error\n";
+            error ();
+    }
+}
+
+void rel_op () {
+    switch (input_token) {
+        case t_eq:
+            cout << "predict rel_op --> eq\n";
+            match (t_eq);
+            break;
+        case t_neq:
+            cout << "predict rel_op --> neq\n";
+            match (t_neq);
+            break;
+        case t_lt:
+            cout << "predict rel_op --> lt\n";
+            match (t_lt);
+            break;
+        case t_gt:
+            cout << "predict rel_op --> gt\n";
+            match (t_gt);
+            break;
+        case t_lte:
+            cout << "predict rel_op --> lte\n";
+            match (t_lte);
+            break;
+        case t_gte:
+            cout << "predict rel_op --> gte\n";
+            match (t_gte);
+            break;
+        default:
+            cout << "rel_op error\n";
+            error ();
     }
 }
 

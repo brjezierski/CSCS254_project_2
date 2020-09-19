@@ -10,7 +10,16 @@ typedef enum {
 	t_div, 
 	t_lparen, 
 	t_rparen, 
-	t_eof
+	t_eof,
+	t_if,
+	t_end,
+	t_while,
+	t_eq,
+	t_neq,
+	t_lt,
+	t_gt,
+	t_lte,
+	t_gte
 } token;
 
 
