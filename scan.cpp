@@ -87,10 +87,11 @@ token scan() {
             
             else if ((c) == '=') {
                 std::cin.get(c);
+
                 return t_lte;
             } else {
                 // TODO : should return an error?
-                std::cin.get(c);
+                //std::cin.get(c);
             	return t_lt;
             }
             break;
@@ -101,7 +102,7 @@ token scan() {
                 std::cin.get(c);
             	return t_gt;
             } else {
-                std::cin.get(c);
+                //std::cin.get(c);
                 return t_gte;
             }
             break;
