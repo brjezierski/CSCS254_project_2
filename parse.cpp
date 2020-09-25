@@ -5,8 +5,8 @@
     Michael L. Scott, 2008-2020.
 */
 
-#include <cstdio>
-#include <cstdlib>
+// #include <cstdio>
+// #include <cstdlib>
 #include <set>
 #include <string>
 #include <stdexcept>
@@ -143,7 +143,7 @@ void stmt () {              //add handler
     }catch(std:: exception const& except){
         cout << "stmt error\n";
 
-        while(stmtSet.count(input_token)){
+        while(!stmtSet.count(input_token)){
             cout<<"IN STMT while loop AIIII\n";
             input_token=scan();
         }
@@ -172,7 +172,7 @@ void expr () {                  //add handler
     }catch(std:: exception const& except){
         cout << "expr error\n";
 
-        while(exprSet.count(input_token)){
+        while(!exprSet.count(input_token)){
 
             cout<<"IN EXPR while loop AIIII\n";
             input_token=scan();
@@ -325,7 +325,7 @@ void mul_op () {
         */
 
 void cond () {   
-    cout<<"\nIN COND at all\n\n";
+    //cout<<"\nIN COND at all\n\n";
     try{
         switch (input_token) {
         case t_id:
@@ -346,10 +346,10 @@ void cond () {
 
         }
     }catch(std:: exception const& except){
-        cout << "cond error\n";
+        cout << "cond error\n\n";
 
-        while(condSet.count(input_token)){
-            cout<<"IN COND while loop AIIII\n";
+        while(!condSet.count(input_token)){
+            //cout<<"IN COND while loop AIIII\n";
             input_token=scan();
         }
 
