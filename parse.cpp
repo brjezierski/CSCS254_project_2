@@ -7,16 +7,24 @@
 
 #include <cstdio>
 #include <cstdlib>
-
-#include <iostream>
-#include "scanpp.h"
+#include <set>
 #include <string>
+#include <stdexcept>
+#include <iostream>
+#include <algorithm>
+#include <stdexcept>
+
+#include "scanpp.h"
 
 using namespace std;
+set<token> condSet={ t_id, t_read, t_write, t_if, t_while, t_end};
+set<token> exprSet={t_eq,t_neq,t_lt,t_gt,t_lte,t_gte,t_lparen,t_rparen, t_literal,t_id};
+set<token> stmtSet={ t_id, t_read, t_write, t_if, t_while};
 
 const char* names[] = {"read", "write", "id", "literal", "gets",
                        "add", "sub", "mul", "div", "lparen", "rparen", "eof",
                        "if", "end", "eq", "neq", "lt", "gt", "lte", "gte"};
+
 
 static token input_token;
 
@@ -77,8 +85,8 @@ void stmt_list () {
         case t_read:
         case t_write:
         case t_if:
-        case t_while:
-            cout << "predict stmt_list --> stmt stmt_list\n";
+        case t_while:                   //Why is the while case in statement list?
+            cout << "predict stmt_list --> stmt stmt_list\n";       //I was wondering, cause I was looking at the extended language that is provided and they don't have while
             stmt ();
             stmt_list ();
             break;
@@ -92,8 +100,9 @@ void stmt_list () {
     }
 }
 
-void stmt () {
-    switch (input_token) {
+void stmt () {              //add handler
+    try{
+        switch (input_token) {
         case t_id:
             cout << "predict stmt --> id gets expr\n";
             match (t_id);
@@ -125,13 +134,27 @@ void stmt () {
             match (t_end);
             break;
         default:
-            cout << "stmt error\n";
-            error ();
+            //throw 'e';
+            //cout << "stmt error\n";
+            //error ();
+            throw std::runtime_error("exception thrown in stmt\n");
+
+        }
+    }catch(std:: exception const& except){
+        cout << "stmt error\n";
+
+        while(stmtSet.count(input_token)){
+            cout<<"IN STMT while loop AIIII\n";
+            input_token=scan();
+        }
+
     }
+    
 }
 
-void expr () {
-    switch (input_token) {
+void expr () {                  //add handler
+    try{
+        switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
@@ -140,9 +163,22 @@ void expr () {
             term_tail ();
             break;
         default:
-            cout << "syntax error\n";
-            error ();
+            //throw 'e';
+            //cout << "syntax error\n";
+            //error ();
+            throw std::runtime_error("exception thrown in expr\n");
+
+        }
+    }catch(std:: exception const& except){
+        cout << "expr error\n";
+
+        while(exprSet.count(input_token)){
+
+            cout<<"IN EXPR while loop AIIII\n";
+            input_token=scan();
+        }
     }
+    
 }
 
 void term () {
@@ -278,8 +314,20 @@ void mul_op () {
     }
 }
 
-void cond () {
-    switch (input_token) {
+   /*
+             procedure stmt
+        try
+            ...             -- code to parse a statement
+        except when syntax_error =>
+            while input_token not in (FOLLOW(stmt) U {$$})
+                get_next_token()
+                
+        */
+
+void cond () {   
+    cout<<"\nIN COND at all\n\n";
+    try{
+        switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
@@ -289,9 +337,23 @@ void cond () {
             expr ();
             break;
         default:
-            cout << "cond error\n";
-            error ();
-    }
+            //cout << "cond error\n";           //commented out two lines
+            //error ();
+            //throw 'e';
+            //cout << "cond error\n";           //commented out two lines
+            //error ();
+            throw std::runtime_error("exception thrown in cond\n");
+
+        }
+    }catch(std:: exception const& except){
+        cout << "cond error\n";
+
+        while(condSet.count(input_token)){
+            cout<<"IN COND while loop AIIII\n";
+            input_token=scan();
+        }
+
+    }           //!!!!!!!!!!!! Work on hardcoding COND and trying out the function!!!!
 }
 
 void rel_op () {
@@ -328,6 +390,15 @@ void rel_op () {
 
 int main () {
     input_token = scan();
+
     program();
     return 0;
 }
+
+
+
+
+
+
+
+
