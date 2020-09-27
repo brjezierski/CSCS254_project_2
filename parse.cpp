@@ -66,12 +66,6 @@ void printPreorder(Node* tree)
     }
 }  
 
-void printTree(Node* tree) {
-    cout << "(";
-    printPreorder(tree);
-    cout << ")";
-}
-
 /* Print nodes in preorder */
 void printPreorderIdent(Node* tree, int identation) 
 {
@@ -95,6 +89,17 @@ void printPreorderIdent(Node* tree, int identation)
             cout << ")";
         }   
     }
+}
+
+void printTree(Node* tree, bool ident) {
+    cout << "(";
+    if (ident) {
+        printPreorderIdent(tree, 0);
+    }
+    else {
+        printPreorder(tree);
+    }
+    cout << ")";
 }
 
 void error () {
@@ -151,7 +156,6 @@ void program (Node* tree) {
             cout << "program error\n";
             error ();
     }
-    printTree(rootNode);
 }
 
 void stmt_list (Node* tree) {
@@ -518,6 +522,10 @@ int main () {
     const char* root = "";
     Node* tree = newNode(root);
     program(tree);
+    printTree(tree, true);
+    cout << "\n";
+    printTree(tree, false);
+    cout << "\n";
     return 0;
 }
 
