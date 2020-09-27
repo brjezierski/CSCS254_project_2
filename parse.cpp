@@ -5,8 +5,6 @@
     Michael L. Scott, 2008-2020.
 */
 
-// #include <cstdio>
-// #include <cstdlib>
 #include <set>
 #include <string>
 #include <stdexcept>
@@ -16,11 +14,29 @@
 #include <fstream>
 
 #include "scanpp.h"
+#include <string>
+#include <vector> 
 
 using namespace std;
+
 set<token> condSet={ t_id, t_read, t_write, t_if, t_while, t_end};
 set<token> exprSet={t_eq,t_neq,t_lt,t_gt,t_lte,t_gte,t_lparen,t_rparen, t_literal,t_id};
 set<token> stmtSet={ t_id, t_read, t_write, t_if, t_while};
+
+Node* rootNode;
+   
+struct Node 
+{
+    string token; 
+    vector<Node *> child; 
+}; 
+   
+Node *newNode(string token) 
+{ 
+    Node *temp = new Node; 
+    temp->token = token; 
+    return temp; 
+} 
 
 const char* names[] = {"read", "write", "id", "literal", "gets",
                        "add", "sub", "mul", "div", "lparen", "rparen", "eof",
@@ -29,10 +45,77 @@ const char* names[] = {"read", "write", "id", "literal", "gets",
 
 static token input_token;
 
+/* Print nodes in preorder*/
+void printPreorder(Node* tree) 
+{ 
+    if (tree == NULL) {
+        return; 
+    }
+    cout << tree->token << " "; 
+    if (tree->child.size() == 0) {
+        cout << "()";
+    }
+    for (int i=0; i<tree->child.size(); i++) {
+        if (i == 0) {
+            cout << "(";
+        }
+        printPreorder(tree->child[i]); 
+        if (i == tree->child.size()-1) {
+            cout << ")";
+        }   
+    }
+}  
+
+void printTree(Node* tree) {
+    cout << "(";
+    printPreorder(tree);
+    cout << ")";
+}
+
+/* Print nodes in preorder */
+void printPreorderIdent(Node* tree, int identation) 
+{
+    if (tree == NULL) {
+        return; 
+    }
+    cout << "\n";
+    for (int i=0; i<identation; i++) {
+        cout << "\t";
+    }
+    cout << tree->token << " "; 
+    if (tree->child.size() == 0) {
+        cout << "()";
+    }
+    for (int i=0; i<tree->child.size(); i++) {
+        if (i == 0) {
+            cout << "(";
+        }
+        printPreorderIdent(tree->child[i], identation+1); 
+        if (i == tree->child.size()-1) {
+            cout << ")";
+        }   
+    }
+}
+
 void error () {
     cout << "syntax error\n";
     exit (1);
 }
+
+
+void match (token expected);
+void program (Node* tree);
+void stmt_list (Node* tree);
+void stmt (Node* tree);
+void expr (Node* tree);
+void term (Node* tree);
+void term_tail (Node* tree);
+void factor (Node* tree);
+void factor_tail (Node* tree);
+void add_op (Node* tree);
+void mul_op (Node* tree);
+void cond (Node* tree);
+void rel_op (Node* tree);
 
 void match (token expected) {
     if (input_token == expected) {
@@ -48,20 +131,9 @@ void match (token expected) {
     }
 }
 
-void program ();
-void stmt_list ();
-void stmt ();
-void expr ();
-void term ();
-void term_tail ();
-void factor ();
-void factor_tail ();
-void add_op ();
-void mul_op ();
-void cond ();
-void rel_op ();
-
-void program () {
+void program (Node* tree) {
+    tree->token="P";
+    rootNode = tree;
     switch (input_token) {
         case t_id:
         case t_read:
@@ -70,31 +142,35 @@ void program () {
         case t_if:
         case t_while:
             cout << "predict program --> stmt_list eof\n";
-            stmt_list ();
-            cout<<"IN PROGRAMMMMMM\n\n\n\n";
+            (tree->child).push_back(newNode("SL"));
+            stmt_list (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("$$"));
             match (t_eof);
             break;
         default:
             cout << "program error\n";
             error ();
     }
-
+    printTree(rootNode);
 }
 
-void stmt_list () {
+void stmt_list (Node* tree) {
     switch (input_token) {
         case t_id:
         case t_read:
         case t_write:
         case t_if:
-        case t_while:                   //Why is the while case in statement list?
-            cout << "predict stmt_list --> stmt stmt_list\n";       //I was wondering, cause I was looking at the extended language that is provided and they don't have while
-            stmt ();
-            stmt_list ();
+        case t_while:
+            cout << "predict stmt_list --> stmt stmt_list\n";
+            (tree->child).push_back(newNode("S"));
+            stmt (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("SL"));
+            stmt_list (tree->child[(tree->child).size()-1]);
             break;
         case t_eof:
         case t_end:
             cout << "predict stmt_list --> epsilon\n";
+            (tree->child).push_back(newNode("epsilon"));
             break;          /* epsilon production */
         default:
             cout << "stmt_list error\n";
@@ -102,37 +178,52 @@ void stmt_list () {
     }
 }
 
-void stmt () {              //add handler
+void stmt (Node* tree) {
     try{
         switch (input_token) {
         case t_id:
             cout << "predict stmt --> id gets expr\n";
+            (tree->child).push_back(newNode(token_image));
             match (t_id);
+            (tree->child).push_back(newNode(":="));
             match (t_gets);
-            expr ();
+            (tree->child).push_back(newNode("E"));
+            expr (tree->child[(tree->child).size()-1]);
             break;
         case t_read:
             cout << "predict stmt --> read id\n";
+            (tree->child).push_back(newNode("read"));
             match (t_read);
+            (tree->child).push_back(newNode(token_image));
             match (t_id);
             break;
         case t_write:
             cout << "predict stmt --> write expr\n";
+            (tree->child).push_back(newNode("write"));
             match (t_write);
-            expr ();
+            (tree->child).push_back(newNode("E"));
+            expr (tree->child[(tree->child).size()-1]);
             break;
         case t_if:
             cout << "predict stmt --> if cond stmt_list end\n";
+            (tree->child).push_back(newNode("if"));
             match (t_if);
-            cond ();
-            stmt_list ();
+            (tree->child).push_back(newNode("C"));
+            cond (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("SL"));
+            stmt_list (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("end"));
             match (t_end);
             break;
         case t_while:
             cout << "predict stmt --> while cond stmt_list end\n";
+            (tree->child).push_back(newNode("while"));
             match (t_while);
-            cond ();
-            stmt_list ();
+            (tree->child).push_back(newNode("C"));
+            cond (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("SL"));
+            stmt_list (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("end"));
             match (t_end);
             break;
         default:
@@ -154,15 +245,17 @@ void stmt () {              //add handler
     
 }
 
-void expr () {                  //add handler
+void expr (Node* tree) {              //add handler
     try{
         switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
             cout << "predict expr --> term term_tail\n";
-            term ();
-            term_tail ();
+            (tree->child).push_back(newNode("T"));
+            term (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("TT"));
+            term_tail (tree->child[(tree->child).size()-1]);
             break;
         default:
             //throw 'e';
@@ -183,14 +276,16 @@ void expr () {                  //add handler
     
 }
 
-void term () {
+void term (Node* tree) {
     switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
             cout << "predict term --> factor factor_tail\n";
-            factor ();
-            factor_tail ();
+            (tree->child).push_back(newNode("F"));
+            factor (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("FT"));
+            factor_tail (tree->child[(tree->child).size()-1]);
             break;
         default:
             cout << "expr error\n";
@@ -198,14 +293,17 @@ void term () {
     }
 }
 
-void term_tail () {
+void term_tail (Node* tree) {
     switch (input_token) {
         case t_add:
         case t_sub:
             cout << "predict term_tail --> add_op term term_tail\n";
-            add_op ();
-            term ();
-            term_tail ();
+            (tree->child).push_back(newNode("ao"));
+            add_op (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("T"));
+            term (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("TT"));
+            term_tail (tree->child[(tree->child).size()-1]);
             break;
         case t_rparen:
         case t_id:
@@ -222,6 +320,7 @@ void term_tail () {
         case t_lte:
         case t_gte:
             cout << "predict term_tail --> epsilon\n";
+            (tree->child).push_back(newNode("epsilon"));
             break;          /* epsilon production */
         default:
             cout << "term_tail error\n";
@@ -229,20 +328,25 @@ void term_tail () {
     }
 }
 
-void factor () {
+void factor (Node* tree) {
     switch (input_token) {
         case t_literal:
             cout << "predict factor --> literal\n";
+            (tree->child).push_back(newNode(token_image));
             match (t_literal);
             break;
         case t_id :
             cout << "predict factor --> id\n";
+            (tree->child).push_back(newNode(token_image));
             match (t_id);
             break;
         case t_lparen:
             cout << "predict factor --> lparen expr rparen\n";
+            (tree->child).push_back(newNode("("));
             match (t_lparen);
-            expr ();
+            (tree->child).push_back(newNode("T"));
+            expr (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode(")"));
             match (t_rparen);
             break;
         default:
@@ -251,14 +355,17 @@ void factor () {
     }
 }
 
-void factor_tail () {
+void factor_tail (Node* tree) {
     switch (input_token) {
         case t_mul:
         case t_div:
             cout << "predict factor_tail --> mul_op factor factor_tail\n";
-            mul_op ();
-            factor ();
-            factor_tail ();
+            (tree->child).push_back(newNode("mo"));
+            mul_op (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("F"));
+            factor (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("FT"));
+            factor_tail (tree->child[(tree->child).size()-1]);
             break;
         case t_add:
         case t_sub:
@@ -277,6 +384,7 @@ void factor_tail () {
         case t_lte:
         case t_gte:
             cout << "predict factor_tail --> epsilon\n";
+            (tree->child).push_back(newNode("epsilon"));
             break;          /* epsilon production */
         default:
             cout << "factor_tail error\n";
@@ -284,14 +392,16 @@ void factor_tail () {
     }
 }
 
-void add_op () {
+void add_op (Node* tree) {
     switch (input_token) {
         case t_add:
             cout << "predict add_op --> add\n";
+            (tree->child).push_back(newNode("+"));
             match (t_add);
             break;
         case t_sub:
             cout << "predict add_op --> sub\n";
+            (tree->child).push_back(newNode("-"));
             match (t_sub);
             break;
         default:
@@ -300,14 +410,16 @@ void add_op () {
     }
 }
 
-void mul_op () {
+void mul_op (Node* tree) {
     switch (input_token) {
         case t_mul:
             cout << "predict mul_op --> mul\n";
+            (tree->child).push_back(newNode("*"));
             match (t_mul);
             break;
         case t_div:
             cout << "predict mul_op --> div\n";
+            (tree->child).push_back(newNode("/"));
             match (t_div);
             break;
         default:
@@ -326,7 +438,7 @@ void mul_op () {
                 
         */
 
-void cond (){
+void cond (Node* tree) {
     //cout<<"\nIN COND at all\n\n";
     try{
         switch (input_token) {
@@ -334,9 +446,12 @@ void cond (){
         case t_literal:
         case t_lparen:
             cout << "predict cond --> expr rel_op expr\n";
-            expr ();
-            rel_op ();
-            expr ();
+            (tree->child).push_back(newNode("E"));
+            expr (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("ro"));
+            rel_op (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("E"));
+            expr (tree->child[(tree->child).size()-1]);
             break;
         default:
             //cout << "cond error\n";           //commented out two lines
@@ -360,30 +475,36 @@ void cond (){
     }           //!!!!!!!!!!!! Work on hardcoding COND and trying out the function!!!!
 }
 
-void rel_op () {
+void rel_op (Node* tree) {
     switch (input_token) {
         case t_eq:
             cout << "predict rel_op --> eq\n";
+            (tree->child).push_back(newNode("="));
             match (t_eq);
             break;
         case t_neq:
             cout << "predict rel_op --> neq\n";
+            (tree->child).push_back(newNode("<>"));
             match (t_neq);
             break;
         case t_lt:
             cout << "predict rel_op --> lt\n";
+            (tree->child).push_back(newNode("<"));
             match (t_lt);
             break;
         case t_gt:
             cout << "predict rel_op --> gt\n";
+            (tree->child).push_back(newNode(">"));
             match (t_gt);
             break;
         case t_lte:
             cout << "predict rel_op --> lte\n";
+            (tree->child).push_back(newNode("<="));
             match (t_lte);
             break;
         case t_gte:
             cout << "predict rel_op --> gte\n";
+            (tree->child).push_back(newNode(">="));
             match (t_gte);
             break;
         default:
@@ -393,11 +514,10 @@ void rel_op () {
 }
 
 int main () {
-    
-
     input_token = scan();
-
-    program();
+    const char* root = "";
+    Node* tree = newNode(root);
+    program(tree);
     return 0;
 }
 

@@ -35,51 +35,19 @@ char token_image[MAX_TOKEN_LEN];
 
 
 token scan() {
-<<<<<<< HEAD
     static char c = ' ';
-||||||| merged common ancestors
-    static int c = ' ';
-=======
-      static char c = ' ';
-    //                              TRY READING FROM INSIDE THIS FUNCTION
-
-
-    // std::string line;
-    //std::ifstream file("test2");
-    // file.open("test2");
-
-
-    // if(file){
-    //     file.getc();
-    //     std::cout<<c<<"\n";
-    // }
-    // getline(inFile,line);
-    // std::cout<<line<<"\n";
-
-    // std::string line;
-    // if(inFile.is_open()){
-    //     while (getline(inFile,line)){
-    //         std::cout << line << "\n";
-    //     }
-    //     inFile.close();
-    // }else std::cout << "Problem opening file\n"; 
-
-  
->>>>>>> 7a3a4a3b99abf3b34dc9b2a55a06f194d86b8e23
         /* next available char; extra (int) width accommodates EOF */
     int i = 0;              /* index into token_image */
     /* skip white space */
     while (isspace(c)) {
 
         std::cin.get(c);
-        //std::cout<<c<<"\n";
-    	//c = getchar();
     }
 
 
-
-    if (c == EOF)
+    if (c == '$') {
         return t_eof;
+    }
 
     if (isalpha(c)) {
         do {
@@ -89,7 +57,6 @@ token scan() {
                 exit(1);
             }
             std::cin.get(c);
-            //c = getchar();
         } while (isalpha(c) || isdigit(c) || c == '_');
         token_image[i] = '\0';
         if (!strcmp(token_image, "read")) return t_read;
