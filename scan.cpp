@@ -63,6 +63,7 @@ token scan() {
         else if (!strcmp(token_image, "write")) return t_write;
         else if (!strcmp(token_image, "if")) return t_if;
         else if (!strcmp(token_image, "while")) return t_while;
+        else if (!strcmp(token_image, "else")) return t_else;
         else if (!strcmp(token_image, "end")) return t_end;
         else return t_id;
     }

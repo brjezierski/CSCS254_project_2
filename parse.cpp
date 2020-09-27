@@ -47,7 +47,7 @@ Node *newNode(string token)
 
 const char* names[] = {"read", "write", "id", "literal", "gets",
                        "add", "sub", "mul", "div", "lparen", "rparen", "eof",
-                       "if", "end", "eq", "neq", "lt", "gt", "lte", "gte"};
+                       "if", "end", "while", "eq", "neq", "lt", "gt", "lte", "gte", "else"};
 
 
 static token input_token;
@@ -127,6 +127,7 @@ void factor_tail (Node* tree);
 void add_op (Node* tree);
 void mul_op (Node* tree);
 void cond (Node* tree);
+void cond_tail (Node* tree);
 void rel_op (Node* tree);
 
 void match (token expected) {
@@ -180,6 +181,7 @@ void stmt_list (Node* tree) {
             break;
         case t_eof:
         case t_end:
+        case t_else:
             cout << "predict stmt_list --> epsilon\n";
             (tree->child).push_back(newNode("epsilon"));
             break;          /* epsilon production */
@@ -216,15 +218,15 @@ void stmt (Node* tree) {
             expr (tree->child[(tree->child).size()-1]);
             break;
         case t_if:
-            cout << "predict stmt --> if cond stmt_list end\n";
+            cout << "predict stmt --> if cond stmt_list cond_tail \n";
             (tree->child).push_back(newNode("if"));
             match (t_if);
             (tree->child).push_back(newNode("C"));
             cond (tree->child[(tree->child).size()-1]);
             (tree->child).push_back(newNode("SL"));
             stmt_list (tree->child[(tree->child).size()-1]);
-            (tree->child).push_back(newNode("end"));
-            match (t_end);
+            (tree->child).push_back(newNode("CT"));
+            cond_tail (tree->child[(tree->child).size()-1]);
             break;
         case t_while:
             cout << "predict stmt --> while cond stmt_list end\n";
@@ -333,6 +335,7 @@ void term_tail (Node* tree) {
         case t_gt:
         case t_lte:
         case t_gte:
+        case t_else:
             cout << "predict term_tail --> epsilon\n";
             (tree->child).push_back(newNode("epsilon"));
             break;          /* epsilon production */
@@ -397,6 +400,7 @@ void factor_tail (Node* tree) {
         case t_gt:
         case t_lte:
         case t_gte:
+        case t_else:
             cout << "predict factor_tail --> epsilon\n";
             (tree->child).push_back(newNode("epsilon"));
             break;          /* epsilon production */
@@ -488,6 +492,29 @@ void cond (Node* tree) {
         }
 
     }           //!!!!!!!!!!!! Work on hardcoding COND and trying out the function!!!!
+}
+
+void cond_tail (Node* tree) {
+    switch (input_token) {
+        case t_end:
+            cout << "predict cond_tail --> end\n";
+            (tree->child).push_back(newNode("end"));
+            match (t_end);
+            break;
+        case t_else:
+            //cout << tree->token;
+            cout << "predict cond_tail --> else stmt_list end\n";
+            (tree->child).push_back(newNode("else"));
+            match (t_else);
+            (tree->child).push_back(newNode("SL"));
+            stmt_list (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("end"));
+            match (t_end);
+            break;
+        default:
+            cout << "condition tail error\n";
+            error ();
+    }
 }
 
 void rel_op (Node* tree) {
@@ -623,11 +650,3 @@ int main () {
     }
     return 0;
 }
-
-
-
-
-
-
-
-

@@ -21,7 +21,8 @@ typedef enum {
 	t_lt=17,
 	t_gt=18,
 	t_lte=19,
-	t_gte=20
+	t_gte=20,
+	t_else=21
 } token;
 
 
@@ -32,6 +33,6 @@ token scan();
 void converter(token input_token);
 
 
-extern "C" char token_image[MAX_TOKEN_LEN];
+extern char token_image[MAX_TOKEN_LEN];
 
 struct Node;
