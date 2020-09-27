@@ -1,33 +1,39 @@
 
+
 typedef enum {
-	t_read, 
-	t_write, 
-	t_id, 
-	t_literal, 
-	t_gets,
-	t_add, 
-	t_sub, 
-	t_mul, 
-	t_div, 
-	t_lparen, 
-	t_rparen, 
-	t_eof,
-	t_if,
-	t_end,
-	t_while,
-	t_eq,
-	t_neq,
-	t_lt,
-	t_gt,
-	t_lte,
-	t_gte
+	t_read=0, 
+	t_write=1, 
+	t_id=2, 
+	t_literal=3, 
+	t_gets=4,
+	t_add=5, 
+	t_sub=6, 
+	t_mul=7, 
+	t_div=8, 
+	t_lparen=9, 
+	t_rparen=10, 
+	t_eof=11,
+	t_if=12,
+	t_end=13,
+	t_while=14,
+	t_eq=15,
+	t_neq=16,
+	t_lt=17,
+	t_gt=18,
+	t_lte=19,
+	t_gte=20
 } token;
+
 
 const int MAX_TOKEN_LEN=128;
 const std::ifstream inFile ("test2");
 // extern int counter;
 
+//std::string errorMsgs;
+
 token scan();
+void converter(token input_token);
+
 
 extern "C" char token_image[MAX_TOKEN_LEN];
 

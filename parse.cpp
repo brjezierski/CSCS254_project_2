@@ -12,6 +12,9 @@
 #include <algorithm>
 #include <stdexcept>
 #include <fstream>
+#include <list>
+#include <iterator>
+
 
 #include "scanpp.h"
 #include <string>
@@ -19,11 +22,15 @@
 
 using namespace std;
 
+
 set<token> condSet={ t_id, t_read, t_write, t_if, t_while, t_end};
 set<token> exprSet={t_eq,t_neq,t_lt,t_gt,t_lte,t_gte,t_lparen,t_rparen, t_literal,t_id};
 set<token> stmtSet={ t_id, t_read, t_write, t_if, t_while};
 
+static list <token> errorList;
+
 Node* rootNode;
+
    
 struct Node 
 {
@@ -237,7 +244,9 @@ void stmt (Node* tree) {
         cout << "stmt error\n";
 
         while(!stmtSet.count(input_token)){
+
             cout<<"Syntax error in statement: "<<input_token<<"\n\n";
+            errorList.push_back(input_token);
             input_token=scan();
         }
 
@@ -270,6 +279,7 @@ void expr (Node* tree) {              //add handler
         while(!exprSet.count(input_token)){
 
             cout<<"Syntax error in expression: "<<input_token<<"\n\n";
+            errorList.push_back(input_token);
             input_token=scan();
         }
     }
@@ -468,7 +478,8 @@ void cond (Node* tree) {
         while(!condSet.count(input_token)){
             cout<<"Syntax error in condition non-terminal: "<<input_token<<"\n\n";
             //cout<<"IN COND while loop AIIII\n"<<token[input_token]<<"\n\n";
-
+            errorList.push_back(input_token);
+            //converter(input_token);
             input_token=scan();
         }
 
@@ -513,11 +524,93 @@ void rel_op (Node* tree) {
     }
 }
 
+void converter(token input_token){
+    //std::cout<<"Check output above for more details about the error\n\n\n";
+    switch(input_token){
+        case 0:
+            std::cout<<"Syntax_error with read token\n";
+            break;
+        case 1:
+            std::cout<<"Syntax_error with write token\n";
+            break;
+        case 2:
+            std::cout<<"Syntax_error with id token\n";
+            break;
+        case 3:
+            std::cout<<"Syntax_error with literal token\n";
+            break;
+        case 4:
+            std::cout<<"Syntax_error with gets token\n";
+            break;
+        case 5:
+            std::cout<<"Syntax_error with + token\n";
+            break;
+        case 6:
+            std::cout<<"Syntax_error with - token\n";
+            break;
+        case 7:
+            std::cout<<"Syntax_error with * token\n";
+            break;
+        case 8:
+            std::cout<<"Syntax_error with / token\n";
+            break;
+        case 9:
+            std::cout<<"Syntax_error with ( token\n";
+            break;
+        case 10:
+            std::cout<<"Syntax_error with ) token\n";
+            break;
+        case 11:
+            std::cout<<"Syntax_error with eof token\n";
+            break;
+        case 12:
+            std::cout<<"Syntax_error with if token\n";
+            break;
+        case 13:
+            std::cout<<"Syntax_error with end token\n";
+            break;
+        case 14:
+            std::cout<<"Syntax_error with while token\n";
+            break;
+        case 15:
+            std::cout<<"Syntax_error with = token\n";
+            break;
+        case 16:
+            std::cout<<"Syntax_error with <> token\n";
+            break;
+        case 17:
+            std::cout<<"Syntax_error with < token\n";
+            break;
+        case 18:
+            std::cout<<"Syntax_error with > token\n";
+            break;
+        case 19:
+            std::cout<<"Syntax_error with <= token\n";
+            break;
+        case 20:
+            std::cout<<"Syntax_error with >= token\n";
+            break;
+        default:
+            std:cout<<"default";
+            break;
+    }
+    std::cout<<"\n";
+}
+
 int main () {
     input_token = scan();
     const char* root = "";
     Node* tree = newNode(root);
     program(tree);
+    std::cout<<"\n";
+    if(!errorList.empty()){
+
+        std::cout<<"Check output above for more details about the error\n\n\n";
+        list <token> :: iterator it;
+        for(it=errorList.begin(); it!=errorList.end();++it){
+            converter(*it);
+        }
+    }
     return 0;
 }
 
