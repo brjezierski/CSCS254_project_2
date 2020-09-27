@@ -3,10 +3,14 @@
 
 # Note that rule for goal (parse) must be the first one in this file.
 
+run: parse
+	./parse < test2.txt
 
 parse: parse.o scan.o
-	g++ -std=c++11 -Wall parse.o scan.o -o parse
+	g++ -std=c++11 -Wall parse.o scan.o -o parse 
 	#g++ -o parse parse.o scan.o
+
+
 
 clean:
 	rm -f parse.o parse
@@ -19,5 +23,6 @@ parse.o: scanpp.h parse.cpp
 scan.o: scanpp.h scan.cpp 
 	#g++ -c scan.cpp
 	g++ -c -std=c++11 scan.cpp
+
 
 
