@@ -13,6 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
+#include <fstream>
 
 #include "scanpp.h"
 
@@ -70,6 +71,7 @@ void program () {
         case t_while:
             cout << "predict program --> stmt_list eof\n";
             stmt_list ();
+            cout<<"IN PROGRAMMMMMM\n\n\n\n";
             match (t_eof);
             break;
         default:
@@ -144,7 +146,7 @@ void stmt () {              //add handler
         cout << "stmt error\n";
 
         while(!stmtSet.count(input_token)){
-            cout<<"IN STMT while loop AIIII\n";
+            cout<<"Syntax error in statement: "<<input_token<<"\n\n";
             input_token=scan();
         }
 
@@ -174,7 +176,7 @@ void expr () {                  //add handler
 
         while(!exprSet.count(input_token)){
 
-            cout<<"IN EXPR while loop AIIII\n";
+            cout<<"Syntax error in expression: "<<input_token<<"\n\n";
             input_token=scan();
         }
     }
@@ -324,7 +326,7 @@ void mul_op () {
                 
         */
 
-void cond () {   
+void cond (){
     //cout<<"\nIN COND at all\n\n";
     try{
         switch (input_token) {
@@ -346,10 +348,12 @@ void cond () {
 
         }
     }catch(std:: exception const& except){
-        cout << "cond error\n\n";
+        cout << "cond error\n\n"<<input_token<<"\n\n";
 
         while(!condSet.count(input_token)){
-            //cout<<"IN COND while loop AIIII\n";
+            cout<<"Syntax error in condition non-terminal: "<<input_token<<"\n\n";
+            //cout<<"IN COND while loop AIIII\n"<<token[input_token]<<"\n\n";
+
             input_token=scan();
         }
 
@@ -389,6 +393,8 @@ void rel_op () {
 }
 
 int main () {
+    
+
     input_token = scan();
 
     program();

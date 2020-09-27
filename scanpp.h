@@ -24,6 +24,8 @@ typedef enum {
 
 
 const int MAX_TOKEN_LEN=128;
+const std::ifstream inFile ("test2");
+// extern int counter;
 
 token scan();
 
