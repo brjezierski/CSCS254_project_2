@@ -1,3 +1,4 @@
+
 typedef enum {
 	t_read, 
 	t_write, 
@@ -22,9 +23,10 @@ typedef enum {
 	t_gte
 } token;
 
-
 const int MAX_TOKEN_LEN=128;
 
 token scan();
 
 extern "C" char token_image[MAX_TOKEN_LEN];
+
+struct Node;
