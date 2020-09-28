@@ -1,5 +1,5 @@
 
-
+//enums with corresponding numbers as interpreted by C++
 typedef enum {
 	t_read=0, 
 	t_write=1, 
@@ -21,18 +21,16 @@ typedef enum {
 	t_lt=17,
 	t_gt=18,
 	t_lte=19,
-	t_gte=20,
-	t_else=21
+	t_gte=20
 } token;
 
 
 const int MAX_TOKEN_LEN=128;
-
+const std::ifstream inFile ("test2");
 
 token scan();
 void converter(token input_token);
-
-
-extern char token_image[MAX_TOKEN_LEN];
+//uses C++ extern function to link the char array in the different code files
+extern "C++" char token_image[MAX_TOKEN_LEN];
 
 struct Node;

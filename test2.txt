@@ -1,0 +1,8 @@
+read n
+cp := 2
+if x > 0
+   cp := cp + 1
+else
+   cp := cp + 2
+end
+$$

@@ -23,10 +23,23 @@
 using namespace std;
 
 
-set<token> condSet={ t_id, t_read, t_write, t_if, t_while, t_end};
-set<token> exprSet={t_eq,t_neq,t_lt,t_gt,t_lte,t_gte,t_lparen,t_rparen, t_literal,t_id};
-set<token> stmtSet={ t_id, t_read, t_write, t_if, t_while};
+/*
+    Hard-coded FOLLOW sets for the different non-terminals
+*/
+set<token> condSet={ t_id, t_read, t_write, t_if, t_while, t_end, t_eof};
+set<token> exprSet={t_id, t_read, t_write, t_if, t_while, t_end, t_eof, t_eq,t_neq,t_lt,t_gt,t_lte,t_gte,t_rparen};
+set<token> stmtSet={ t_id, t_read, t_write, t_if, t_while,t_eof,t_end};
 
+set<token> stmtlistSet={t_eof, t_end};
+set<token> termSet={t_add, t_sub,t_id, t_read,t_write,t_if,t_while,t_eof,t_eq,t_neq,t_lt,t_gt,t_lte,t_gte,t_end,t_rparen};
+set<token> factorSet={t_mul,t_div,t_add,t_sub,t_id,t_read,t_write,t_if, t_while,t_eof,t_eq,t_neq,t_lt,t_gt,t_lte,t_gte,t_end,t_rparen};
+set<token> termtailSet={t_id,t_read,t_write,t_if,t_while,t_eof,t_eq,t_neq,t_lt,t_gt,t_lte,t_gte,t_end,t_rparen};
+set<token> factortailSet={t_add,t_sub, t_id,t_read,t_write,t_if,t_while,t_eof,t_eq,t_neq,t_lt,t_gt,t_lte,t_gte,t_end,t_rparen};
+set<token> roSet={t_lparen,t_id,t_literal};
+set<token> aoSet={t_lparen,t_id,t_literal};
+set<token> moSet={t_lparen,t_id,t_literal};
+
+//Stores errors 
 static list <token> errorList;
 
 Node* rootNode;
@@ -47,7 +60,7 @@ Node *newNode(string token)
 
 const char* names[] = {"read", "write", "id", "literal", "gets",
                        "add", "sub", "mul", "div", "lparen", "rparen", "eof",
-                       "if", "end", "while", "eq", "neq", "lt", "gt", "lte", "gte", "else"};
+                       "if", "end", "eq", "neq", "lt", "gt", "lte", "gte"};
 
 
 static token input_token;
@@ -72,6 +85,12 @@ void printPreorder(Node* tree)
         }   
     }
 }  
+
+void printTree(Node* tree) {
+    cout << "(";
+    printPreorder(tree);
+    cout << ")";
+}
 
 /* Print nodes in preorder */
 void printPreorderIdent(Node* tree, int identation) 
@@ -98,17 +117,6 @@ void printPreorderIdent(Node* tree, int identation)
     }
 }
 
-void printTree(Node* tree, bool ident) {
-    cout << "(";
-    if (ident) {
-        printPreorderIdent(tree, 0);
-    }
-    else {
-        printPreorder(tree);
-    }
-    cout << ")";
-}
-
 void error () {
     cout << "syntax error\n";
     exit (1);
@@ -127,7 +135,6 @@ void factor_tail (Node* tree);
 void add_op (Node* tree);
 void mul_op (Node* tree);
 void cond (Node* tree);
-void cond_tail (Node* tree);
 void rel_op (Node* tree);
 
 void match (token expected) {
@@ -139,7 +146,7 @@ void match (token expected) {
         input_token = scan();
     }
     else {
-        cout << "match error\n";
+        cout << "error in MATCH\n";
         error ();
     }
 }
@@ -147,7 +154,8 @@ void match (token expected) {
 void program (Node* tree) {
     tree->token="P";
     rootNode = tree;
-    switch (input_token) {
+    try{
+        switch (input_token) {
         case t_id:
         case t_read:
         case t_write:
@@ -161,13 +169,28 @@ void program (Node* tree) {
             match (t_eof);
             break;
         default:
-            cout << "program error\n";
-            error ();
+            // cout << "program error\n";
+            // error ();
+            throw std::runtime_error("exception thrown in program\n");
+        }
+    }catch(std:: exception const& except){
+        cout << "program error\n";
+
+        while(!stmtSet.count(input_token)){
+
+            cout<<"Syntax error in program: "<<input_token<<"\n\n";
+            errorList.push_back(input_token);
+            input_token=scan();
+        }
+
     }
+    
+    printTree(rootNode);
 }
 
 void stmt_list (Node* tree) {
-    switch (input_token) {
+    try{
+        switch (input_token) {
         case t_id:
         case t_read:
         case t_write:
@@ -181,14 +204,26 @@ void stmt_list (Node* tree) {
             break;
         case t_eof:
         case t_end:
-        case t_else:
             cout << "predict stmt_list --> epsilon\n";
             (tree->child).push_back(newNode("epsilon"));
             break;          /* epsilon production */
         default:
-            cout << "stmt_list error\n";
-            error ();
+            // cout << "stmt_list error\n";
+            // error ();
+            throw std::runtime_error("exception thrown in statement list\n");
+        }
+    }catch(std:: exception const& except){
+        cout << "stmt list error\n";
+
+        while(!stmtSet.count(input_token)){
+
+            cout<<"Syntax error in statement list: "<<input_token<<"\n\n";
+            errorList.push_back(input_token);
+            input_token=scan();
+        }
+
     }
+    
 }
 
 void stmt (Node* tree) {
@@ -218,15 +253,15 @@ void stmt (Node* tree) {
             expr (tree->child[(tree->child).size()-1]);
             break;
         case t_if:
-            cout << "predict stmt --> if cond stmt_list cond_tail \n";
+            cout << "predict stmt --> if cond stmt_list end\n";
             (tree->child).push_back(newNode("if"));
             match (t_if);
             (tree->child).push_back(newNode("C"));
             cond (tree->child[(tree->child).size()-1]);
             (tree->child).push_back(newNode("SL"));
             stmt_list (tree->child[(tree->child).size()-1]);
-            (tree->child).push_back(newNode("CT"));
-            cond_tail (tree->child[(tree->child).size()-1]);
+            (tree->child).push_back(newNode("end"));
+            match (t_end);
             break;
         case t_while:
             cout << "predict stmt --> while cond stmt_list end\n";
@@ -293,7 +328,8 @@ void expr (Node* tree) {              //add handler
 }
 
 void term (Node* tree) {
-    switch (input_token) {
+    try{
+        switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
@@ -304,13 +340,26 @@ void term (Node* tree) {
             factor_tail (tree->child[(tree->child).size()-1]);
             break;
         default:
-            cout << "expr error\n";
-            error ();
+            // cout << "expr error\n";
+            // error ();
+            throw std::runtime_error("exception thrown in term\n");
+        }
+    }catch(std:: exception const& except){
+
+        while(!condSet.count(input_token)){
+            cout<<"Syntax error in term non-terminal: "<<input_token<<"\n\n";
+            //cout<<"IN COND while loop AIIII\n"<<token[input_token]<<"\n\n";
+            errorList.push_back(input_token);
+            //converter(input_token);
+            input_token=scan();
+        }
     }
+    
 }
 
 void term_tail (Node* tree) {
-    switch (input_token) {
+    try{
+        switch (input_token) {
         case t_add:
         case t_sub:
             cout << "predict term_tail --> add_op term term_tail\n";
@@ -335,18 +384,30 @@ void term_tail (Node* tree) {
         case t_gt:
         case t_lte:
         case t_gte:
-        case t_else:
             cout << "predict term_tail --> epsilon\n";
             (tree->child).push_back(newNode("epsilon"));
             break;          /* epsilon production */
         default:
-            cout << "term_tail error\n";
-            error ();
+            // cout << "term_tail error\n";
+            // error ();
+            throw std::runtime_error("exception thrown in term tail\n");
+        }
+    }catch(std:: exception const& except){
+
+        while(!condSet.count(input_token)){
+            cout<<"Syntax error in term tail non-terminal: "<<input_token<<"\n\n";
+            //cout<<"IN COND while loop AIIII\n"<<token[input_token]<<"\n\n";
+            errorList.push_back(input_token);
+            //converter(input_token);
+            input_token=scan();
+        }
     }
+    
 }
 
 void factor (Node* tree) {
-    switch (input_token) {
+    try{
+        switch (input_token) {
         case t_literal:
             cout << "predict factor --> literal\n";
             (tree->child).push_back(newNode(token_image));
@@ -367,13 +428,27 @@ void factor (Node* tree) {
             match (t_rparen);
             break;
         default:
-            cout << "factor error\n";
-            error ();
+            // cout << "factor error\n";
+            // error ();
+        throw std::runtime_error("exception thrown in factor\n");
+        }
+    }catch(std:: exception const& except){
+
+        while(!condSet.count(input_token)){
+            cout<<"Syntax error in factor non-terminal: "<<input_token<<"\n\n";
+            //cout<<"IN COND while loop AIIII\n"<<token[input_token]<<"\n\n";
+            errorList.push_back(input_token);
+            //converter(input_token);
+            input_token=scan();
+        }
     }
+    
+
 }
 
 void factor_tail (Node* tree) {
-    switch (input_token) {
+    try{
+        switch (input_token) {
         case t_mul:
         case t_div:
             cout << "predict factor_tail --> mul_op factor factor_tail\n";
@@ -400,18 +475,30 @@ void factor_tail (Node* tree) {
         case t_gt:
         case t_lte:
         case t_gte:
-        case t_else:
             cout << "predict factor_tail --> epsilon\n";
             (tree->child).push_back(newNode("epsilon"));
             break;          /* epsilon production */
         default:
-            cout << "factor_tail error\n";
-            error ();
+            throw std::runtime_error("exception thrown in factor_tail\n");
+            // cout << "factor_tail error\n";
+            // error ();
+        }
+    }catch(std:: exception const& except){
+
+        while(!condSet.count(input_token)){
+            cout<<"Syntax error in factor_tail non-terminal: "<<input_token<<"\n\n";
+            //cout<<"IN COND while loop AIIII\n"<<token[input_token]<<"\n\n";
+            errorList.push_back(input_token);
+            //converter(input_token);
+            input_token=scan();
+        }
     }
+    
 }
 
 void add_op (Node* tree) {
-    switch (input_token) {
+    try{
+        switch (input_token) {
         case t_add:
             cout << "predict add_op --> add\n";
             (tree->child).push_back(newNode("+"));
@@ -423,13 +510,26 @@ void add_op (Node* tree) {
             match (t_sub);
             break;
         default:
-            cout << "add_op error\n";
-            error ();
+            throw std::runtime_error("exception thrown in add_op\n");
+            // cout << "add_op error\n";
+            // error ();
+        }
+    }catch(std:: exception const& except){
+
+        while(!condSet.count(input_token)){
+            cout<<"Syntax error in addition op non-terminal: "<<input_token<<"\n\n";
+            //cout<<"IN COND while loop AIIII\n"<<token[input_token]<<"\n\n";
+            errorList.push_back(input_token);
+            //converter(input_token);
+            input_token=scan();
+        }
     }
+    
 }
 
 void mul_op (Node* tree) {
-    switch (input_token) {
+    try{
+        switch (input_token) {
         case t_mul:
             cout << "predict mul_op --> mul\n";
             (tree->child).push_back(newNode("*"));
@@ -441,10 +541,24 @@ void mul_op (Node* tree) {
             match (t_div);
             break;
         default:
-            cout << "mul_op error\n";
-            error ();
+            //cout << "mul_op error\n";
+            //error ();
+            throw std::runtime_error("exception thrown in mul_op\n");
+        }
+    }catch(std:: exception const& except){
+        //cout << "cond error\n\n"<<input_token<<"\n\n";
+
+        while(!condSet.count(input_token)){
+            cout<<"Syntax error in multiplication op non-terminal: "<<input_token<<"\n\n";
+            //cout<<"IN COND while loop AIIII\n"<<token[input_token]<<"\n\n";
+            errorList.push_back(input_token);
+            //converter(input_token);
+            input_token=scan();
+        }
     }
+    
 }
+
 
    /*
              procedure stmt
@@ -491,30 +605,7 @@ void cond (Node* tree) {
             input_token=scan();
         }
 
-    }           //!!!!!!!!!!!! Work on hardcoding COND and trying out the function!!!!
-}
-
-void cond_tail (Node* tree) {
-    switch (input_token) {
-        case t_end:
-            cout << "predict cond_tail --> end\n";
-            (tree->child).push_back(newNode("end"));
-            match (t_end);
-            break;
-        case t_else:
-            //cout << tree->token;
-            cout << "predict cond_tail --> else stmt_list end\n";
-            (tree->child).push_back(newNode("else"));
-            match (t_else);
-            (tree->child).push_back(newNode("SL"));
-            stmt_list (tree->child[(tree->child).size()-1]);
-            (tree->child).push_back(newNode("end"));
-            match (t_end);
-            break;
-        default:
-            cout << "condition tail error\n";
-            error ();
-    }
+    }      
 }
 
 void rel_op (Node* tree) {
@@ -554,9 +645,11 @@ void rel_op (Node* tree) {
             error ();
     }
 }
-
+/*
+    Takes the input tokens and prints the corresponding token information with a syntax error message
+*/
 void converter(token input_token){
-    //std::cout<<"Check output above for more details about the error\n\n\n";
+
     switch(input_token){
         case 0:
             std::cout<<"Syntax_error with read token\n";
@@ -625,7 +718,7 @@ void converter(token input_token){
             std:cout<<"default";
             break;
     }
-    std::cout<<"\n";
+    
 }
 
 int main () {
@@ -633,20 +726,27 @@ int main () {
     const char* root = "";
     Node* tree = newNode(root);
     program(tree);
+
+    /*
+        If there are any errors in the list, it prints them out with a message
+        at the end of the program.
+    */
     std::cout<<"\n";
     if(!errorList.empty()){
 
-        std::cout<<"Check output above for more details about the error\n\n\n";
+        std::cout<<"Check output above for information about where the error happened\n\n";
         list <token> :: iterator it;
         for(it=errorList.begin(); it!=errorList.end();++it){
             converter(*it);
         }
     }
-    else {
-        printTree(tree, true);
-        cout << "\n";
-        printTree(tree, false);
-        cout << "\n";
-    }
     return 0;
 }
+
+
+
+
+
+
+
+

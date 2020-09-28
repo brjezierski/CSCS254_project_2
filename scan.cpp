@@ -8,32 +8,10 @@
 
 char token_image[MAX_TOKEN_LEN];
 
+
 /*
-    The problem is that reading from a file doesn't save, which line we were last at,
-    because we call scan from different places instead of just one
-
-    We also don't want to pass that information every time we scan.
-
-    How can we scan from a file, line by line while knowing which line we were at before?
-    
-    Note:
-    There doesn't seem to be a built in method for this exactly
-
-    Suggestions: 
-    1) parse file into arrays or maps and then save what column you were at in the array
-            This will help with printing, which line the error occured on
-    2) Make scanner get as input, which line it was last on
-            Line by line might be fine, but this will cause problems for each char in a line
-    3)Make an in between function that gets called when you wanna scan smth and keep 
-    track of counter there
-
-
-
-
+    Scans the character input and returns corresponding tokens using C++ Standard I/O
 */
-
-
-
 token scan() {
     static char c = ' ';
         /* next available char; extra (int) width accommodates EOF */
@@ -63,7 +41,6 @@ token scan() {
         else if (!strcmp(token_image, "write")) return t_write;
         else if (!strcmp(token_image, "if")) return t_if;
         else if (!strcmp(token_image, "while")) return t_while;
-        else if (!strcmp(token_image, "else")) return t_else;
         else if (!strcmp(token_image, "end")) return t_end;
         else return t_id;
     }
@@ -71,7 +48,6 @@ token scan() {
         do {
             token_image[i++] = c;
             std::cin.get(c);
-            //c = getchar();
         } while (isdigit(c));
         token_image[i] = '\0';
         return t_literal;
@@ -79,13 +55,10 @@ token scan() {
         case ':':
             std::cin.get(c);
             if ((c) != '=') {
-            //if ((c = getchar()) != '=') {
-                
-            	std:: cout<< stderr<< "error\n";
+            	std:: cout<< stderr<< "error in input of gets in scanner\n";
                 exit(1);
             } else {
                 std::cin.get(c);
-                //c = getchar();
                 return t_gets;
             }
             break;
@@ -96,43 +69,31 @@ token scan() {
         case '*': std::cin.get(c); return t_mul;
         case '/': std::cin.get(c); return t_div;
         case '=': std::cin.get(c); return t_eq;
-        // case '(': c = getchar(); return t_lparen;
-        // case ')': c = getchar(); return t_rparen;
-        // case '+': c = getchar(); return t_add;
-        // case '-': c = getchar(); return t_sub;
-        // case '*': c = getchar(); return t_mul;
-        // case '/': c = getchar(); return t_div;
-        // case '=': c = getchar(); return t_eq;
+
         case '<':
             std::cin.get(c);
             if ((c) == '>') {
                 std::cin.get(c);
-            //if ((c = getchar()) == '>') {
-            //    c = getchar();
                 return t_neq;
             }
             
-            // else if ((c = getchar()) == '=') {
-            //     c = getchar();
+
             
             else if ((c) == '=') {
                 std::cin.get(c);
 
                 return t_lte;
             }else {
-                // TODO : should return an error?
-                //std::cin.get(c);
+
             	return t_lt;
             }
             break;
         case '>':
             std::cin.get(c);
             if ((c) != '=') {
-                // TODO : should return an error?
                 std::cin.get(c);
             	return t_gt;
             } else {
-                //std::cin.get(c);
                 return t_gte;
             }
             break;
